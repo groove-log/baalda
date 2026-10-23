@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { placeMenu, type Placement } from "../lib/menuPlacement";
 import { noteLabel } from "../lib/notePath";
@@ -242,65 +243,67 @@ export function TabBar() {
         </svg>
       </button>
 
-      {menu && (
-        <ul
-          className="context-menu"
-          role="menu"
-          aria-label={`Tab actions for ${menuLabel}`}
-          ref={menuRef}
-          style={
-            menuPos
-              ? { left: menuPos.left, top: menuPos.top, maxHeight: menuPos.maxHeight }
-              : // Rendered off the anchor for the measuring pass only, and hidden
-                // so that pass can't flash on screen at the wrong place.
-                { left: menu.x, top: menu.y, visibility: "hidden" }
-          }
-        >
-          <li
-            role="menuitem"
-            onClick={() => {
-              useStore.getState().closeTab(menu.path);
-              setMenu(null);
-            }}
+      {menu &&
+        createPortal(
+          <ul
+            className="context-menu menu-portal"
+            role="menu"
+            aria-label={`Tab actions for ${menuLabel}`}
+            ref={menuRef}
+            style={
+              menuPos
+                ? { left: menuPos.left, top: menuPos.top, maxHeight: menuPos.maxHeight }
+                : // Rendered off the anchor for the measuring pass only, and hidden
+                  // so that pass can't flash on screen at the wrong place.
+                  { left: menu.x, top: menu.y, visibility: "hidden" }
+            }
           >
-            Close
-          </li>
-          <li
-            role="menuitem"
-            className={tabs.length < 2 ? "disabled" : undefined}
-            onClick={() => {
-              if (tabs.length < 2) return;
-              useStore.getState().closeOtherTabs(menu.path);
-              setMenu(null);
-            }}
-          >
-            Close others
-          </li>
-          <li
-            role="menuitem"
-            // Last tab (or the phantom active-only tab, which renders last) has
-            // nothing to its right.
-            className={menuIdx === -1 || menuIdx === tabs.length - 1 ? "disabled" : undefined}
-            onClick={() => {
-              if (menuIdx === -1 || menuIdx === tabs.length - 1) return;
-              useStore.getState().closeTabsToRight(menu.path);
-              setMenu(null);
-            }}
-          >
-            Close tabs to the right
-          </li>
-          <li
-            role="menuitem"
-            className="menu-sep-item"
-            onClick={() => {
-              useStore.getState().closeAllTabs();
-              setMenu(null);
-            }}
-          >
-            Close all
-          </li>
-        </ul>
-      )}
+            <li
+              role="menuitem"
+              onClick={() => {
+                useStore.getState().closeTab(menu.path);
+                setMenu(null);
+              }}
+            >
+              Close
+            </li>
+            <li
+              role="menuitem"
+              className={tabs.length < 2 ? "disabled" : undefined}
+              onClick={() => {
+                if (tabs.length < 2) return;
+                useStore.getState().closeOtherTabs(menu.path);
+                setMenu(null);
+              }}
+            >
+              Close others
+            </li>
+            <li
+              role="menuitem"
+              // Last tab (or the phantom active-only tab, which renders last) has
+              // nothing to its right.
+              className={menuIdx === -1 || menuIdx === tabs.length - 1 ? "disabled" : undefined}
+              onClick={() => {
+                if (menuIdx === -1 || menuIdx === tabs.length - 1) return;
+                useStore.getState().closeTabsToRight(menu.path);
+                setMenu(null);
+              }}
+            >
+              Close tabs to the right
+            </li>
+            <li
+              role="menuitem"
+              className="menu-sep-item"
+              onClick={() => {
+                useStore.getState().closeAllTabs();
+                setMenu(null);
+              }}
+            >
+              Close all
+            </li>
+          </ul>,
+          document.body,
+        )}
     </div>
   );
 }
